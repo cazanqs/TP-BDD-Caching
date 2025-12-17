@@ -132,14 +132,14 @@ docker compose ps
 
 ### Primary
 ```bash
-docker exec -it db-primary psql -U app -d appdb
+docker exec -it tp-bdd-caching-db-primary-1 psql -U app -d appdb
 SELECT pg_is_in_recovery();
 ```
 ➡️ Résultat attendu : `false`
 
 ### Replica
 ```bash
-docker exec -it db-replica psql -U app -d appdb
+docker exec -it tp-bdd-caching-db-replica-1 psql -U app -d appdb
 SELECT pg_is_in_recovery();
 ```
 ➡️ Résultat attendu : `true`
@@ -194,6 +194,7 @@ backend pg_primary
   option tcp-check
   tcp-check connect
   server primary db-primary:5432 check
+
 ```
 
 ```bash
@@ -239,9 +240,11 @@ Lors d’un `PUT /products/:id` :
 ❓ Question :
 Pourquoi peut-on lire une ancienne valeur ?
 
+Quand on modifie un produit, la modification se fait d'abord sur le primary, mais la replica prend du temps pour se synchroniser (quelques millisecondes). Si on lit tout de suite après, on peut tomber sur l'ancienne valeur de la replica.
+
 ➡️ Expliquez :
-- latence de réplication
-- effet du cache
+- latence de réplication : le temps qu'il faut pour que une modification faite sur le primary arrive jusqu'à la replica.
+- effet du cache : Redis sauvegarde les réponses pour ne pas les demander a la DB à chaque fois.
 
 ---
 
